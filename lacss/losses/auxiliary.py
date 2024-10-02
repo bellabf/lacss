@@ -179,7 +179,7 @@ def collaborator_segm_loss(batch, prediction, *, sigma, pi):
     _, labels, _ = unpack_x_y_sample_weight(batch)
 
     if not "fg_pred" in preds:
-        return None
+        return 0.
 
     if labels is None:
         labels = {}
@@ -197,10 +197,10 @@ def collaborator_border_loss(batch, prediction):
     _, labels, _ = unpack_x_y_sample_weight(batch)
 
     if not "edge_pred" in preds:
-        return None
+        return 0
 
     if labels is not None and ("gt_labels" in labels or "gt_masks" in labels):
-        return None
+        return 0
 
     else:
         return cks_boundry_loss(batch, prediction)

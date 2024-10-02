@@ -50,13 +50,13 @@ class CtcVideo:
 
         if segfn.exists():
             label = imageio.imread(segfn)
-            if label.max() != len(data['centroids']):
-                warnings.warn(f"TRA label and SEG label mismatch")
-            else:
+            if label.max() == len(data['centroids']):
                 locs = np.array([rp.centroid for rp in regionprops(label)]) + .5
                 bboxes = np.array([rp.bbox for rp in regionprops(label)])
                 masks = to_masks(label, bboxes, target_shape=SEG_SHAPE)
                 data.update({"centroids":locs, "bboxes":bboxes, "cell_masks":masks})
+            # else:
+            #     warnings.warn(f"TRA label and SEG label mismatch")
 
         return data
 
@@ -121,12 +121,16 @@ def _prepare_video_data(video, frame, rescale=1.0, method=None):
     return data
 
 
-def video_data_gen(all_movies, n_refs, method=None, padto=256):
+def video_data_gen(all_movies, n_refs, method=None, padto=256, fixed_length=0):
     import random
     random.shuffle(all_movies)
 
     for mov, rescale in all_movies:
-        for frm in range(len(mov)):
+        if fixed_length > 0:
+            start = max(0, len(mov)-fixed_length)
+        else:
+            start = 0
+        for frm in range(start, len(mov)):
             ref_range = np.arange(frm - n_refs, frm + n_refs + 1)
             mask = (ref_range >= 0) & (ref_range < len(mov))
             ref_range = np.clip(ref_range, 0, len(mov)-1)
@@ -236,7 +240,7 @@ def ctc_video_ds(datapath, n_refs=0, method=None):
         for name, scaling in ctc_catalog.items()
     ]
 
-    yield from gf_cycle(video_data_gen)(all_movies, n_refs, method)
+    yield from gf_cycle(video_data_gen)(all_movies, n_refs, method, fixed_length=300)
 
 
 def ctc_video_ds_test(datapath, name, n_refs=0, method=None):

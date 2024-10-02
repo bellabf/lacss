@@ -86,6 +86,9 @@ def train_fn(
     image_mask: ArrayLike|None = None,
     config: ConfigDict = ConfigDict(),
 ) -> dict:
+    image = jnp.asarray(image)
+    gt_locations = jnp.asarray(gt_locations)
+
     max_proposal_offset = config.get("max_proposal_offset", 12)
     max_training_instances = config.get("max_training_instances", 256)
 

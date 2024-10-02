@@ -126,7 +126,7 @@ def get_config():
     config.train.config = ml_collections.ConfigDict()
     config.train.config.detection_roi = 8
     config.train.config.similarity_score_scaling = 4
-    config.train.config.n_labels_min = 4
+    config.train.config.n_labels_min = 1
     config.train.config.n_labels_max = 25
 
     labeled_train_data = (
