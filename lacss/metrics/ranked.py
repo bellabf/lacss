@@ -106,8 +106,8 @@ class AP:
                     p_k = np.maximum.accumulate(p_k[::-1])[::-1]
 
                 aps.append(np.sum(p_k[indicators == 1]) / self.cell_counts)
-                recalls.append(np.count_nonzero(indicators) / self.cell_counts)
-                accs.append(np.count_nonzero(indicators) / len(indicators))
+                recalls.append(p_k / self.cell_counts)
+                accs.append(p_k / np.arange(1, len(indicators)+1))
                 
             self._result = dict(zip(self.thresholds, aps))
             self._recall = dict(zip(self.thresholds, recalls))
