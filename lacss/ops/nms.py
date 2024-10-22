@@ -148,7 +148,7 @@ def non_max_suppression(
     min_score: float = 0,
     return_selection: bool = False,
     similarity_func: callable|None = None,
-) -> tuple[Array]:
+) -> Array|tuple[Array]:
     """non-maximum suppression for either bboxes or points.
 
     Assumption:

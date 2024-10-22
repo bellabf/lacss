@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import warnings
+import random
 from functools import partial, lru_cache
 from pathlib import Path
 
+import jax
 import numpy as np
 import imageio.v2 as imageio
 from skimage.measure import regionprops
@@ -11,6 +13,8 @@ from skimage.transform import resize
 
 import lacss.data.augment_ as augment
 from lacss.data.utils import gf_batch, gf_cycle, image_standardization
+
+jnp = jax.numpy
 
 SEG_SHAPE = (48, 48)
 CACHE_SIZE = 16
@@ -51,7 +55,8 @@ class CtcVideo:
         if segfn.exists():
             label = imageio.imread(segfn)
             if label.max() != len(data['centroids']):
-                warnings.warn(f"TRA label and SEG label mismatch")
+                pass
+                # warnings.warn(f"TRA label and SEG label mismatch")
             else:
                 locs = np.array([rp.centroid for rp in regionprops(label)]) + .5
                 bboxes = np.array([rp.bbox for rp in regionprops(label)])
@@ -121,13 +126,22 @@ def _prepare_video_data(video, frame, rescale=1.0, method=None):
     return data
 
 
-def video_data_gen(all_movies, n_refs, method=None, padto=256):
+def video_data_gen(all_movies, n_refs, method=None, padto=256, fixed_length=None):
     import random
     random.shuffle(all_movies)
 
+    ref_frames = np.array([2**k for k in range(n_refs)])
+    ref_frames = np.r_[-ref_frames[::-1], [0], ref_frames]
+
     for mov, rescale in all_movies:
-        for frm in range(len(mov)):
-            ref_range = np.arange(frm - n_refs, frm + n_refs + 1)
+        if fixed_length is not None and fixed_length < len(mov):
+            starting_frame = random.randint(0, len(mov) - fixed_length)
+            end_frame = starting_frame + fixed_length
+        else:
+            starting_frame = 0
+            end_frame = len(mov)
+        for frm in range(starting_frame, end_frame):
+            ref_range = frm + ref_frames
             mask = (ref_range >= 0) & (ref_range < len(mov))
             ref_range = np.clip(ref_range, 0, len(mov)-1)
 
@@ -139,8 +153,9 @@ def video_data_gen(all_movies, n_refs, method=None, padto=256):
                     ref_data = _prepare_video_data(mov, int(ref_frm), rescale, method)
                     ref_feature.append(ref_data['feature'])
 
-                data['ref_feature'] = [np.stack(x) for x in zip(*ref_feature)]
-                data['ref_mask'] = mask
+                data['video_refs'] = (jnp.stack(ref_feature), mask)
+            else:
+                data['video_refs'] = None
 
             locs = np.asarray(data['centroids'])
             padding = (locs.shape[0]-1)//padto*padto+padto - locs.shape[0]
@@ -159,7 +174,7 @@ def video_data_gen(all_movies, n_refs, method=None, padto=256):
             yield dict(
                 image = data['image'],
                 gt_locations = data['centroids'],
-                video_refs = (data['ref_feature'], data['ref_mask']),
+                video_refs = data['video_refs'],
             ), label
 
 
@@ -167,11 +182,11 @@ ctc_catalog = {
     "BF-C2DL-HSC": 1,
     "BF-C2DL-MuSC": 0.8,
     "DIC-C2DH-HeLa": 35/140,
-    "Fluo-C2DL-Huh7": 35 / 100,
+    "Fluo-C2DL-Huh7": 35/100,
     "Fluo-C2DL-MSC": 0.3,
-    "Fluo-N2DH-SIM+": 35/ 53,
+    "Fluo-N2DH-SIM+": 35/53,
     "Fluo-N2DL-HeLa": 1,
-    "PhC-C2DH-U373":35/ 90,
+    "PhC-C2DH-U373":35/90,
     "PhC-C2DL-PSC": 2.0,
 }
 
