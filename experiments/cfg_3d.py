@@ -88,9 +88,7 @@ def get_config():
     config = ml_collections.ConfigDict()
     config.name = "train_3d"
 
-    model = Lacss.get_tiny_model()
-    model.detector_3d = LPN3D()
-    model.segmentor_3d = Segmentor3D()
+    model = Lacss.get_preconfigued("default")
     config.model = model.get_config()
 
     ds_3d_train = (

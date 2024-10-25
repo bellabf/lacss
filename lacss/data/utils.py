@@ -26,7 +26,7 @@ def gf_cycle(gf):
     return _wrapped
 
 
-def gf_batch_(gf, *, batch_size):
+def gf_batch_(gf, *, batch_size, drop_remainder=True):
     @wraps(gf)
     def _wrapped(*args, **kwargs):
         stopping = False
@@ -39,11 +39,11 @@ def gf_batch_(gf, *, batch_size):
                 except StopIteration:
                     stopping = True
                     break
-            data = jax.tree_util.tree_map(lambda *x: np.stack(x), *data)
 
-            yield data
-
-    assert isinstance(batch_size, int)
+            if len(data) > 0:
+                if not drop_remainder or len(data) == batch_size:
+                    data = jax.tree_util.tree_map(lambda *x: np.stack(x), *data)
+                    yield data
 
     return _wrapped
 

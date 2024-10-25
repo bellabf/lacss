@@ -172,7 +172,7 @@ def get_predictor(modelpath):
 
 
 def show_urls():
-    from .predict import model_urls
+    from . import model_urls
     
     print("Pretrained model files:")
     print("==============================")
