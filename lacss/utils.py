@@ -120,7 +120,7 @@ def load_from_pretrained(pretrained: str):
     else:
         # uri or files were treated as pickled byte steam
         from .modules import Lacss
-        from .train import Trainer
+        # from .train import Trainer
 
         if os.path.isfile(pretrained):
             with open(pretrained, "rb") as f:
@@ -135,17 +135,12 @@ def load_from_pretrained(pretrained: str):
             bytes = urlopen(req).read()
             thingy = pickle.loads(bytes)
 
-        if isinstance(thingy, Trainer):
-            module = thingy.model
-            params = thingy.params
+        cfg, params = thingy
 
+        if isinstance(cfg, Lacss):
+            module = cfg
         else:
-            cfg, params = thingy
-
-            if isinstance(cfg, Lacss):
-                module = cfg
-            else:
-                module = Lacss.from_config(cfg)
+            module = Lacss.from_config(cfg)
 
     if "params" in params and len(params) == 1:
         params = params["params"]
