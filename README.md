@@ -22,7 +22,7 @@ LACSS is a deep-learning model for 2D/3D single-cell segmentation from microscop
 
 #### Deployment
 
-You can now deploy the pretrain models as GRPC server:
+You can now deploy the pretrained models as GRPC server:
 
 ```sh
    python -m lacss.deploy.remote_server --modelpath=<model_file_path>
@@ -33,11 +33,11 @@ For a GUI client see the [Trackmate-Lacss](https://github.com/jiyuuchc/TrackMate
 
 ## Why LACSS?
 
-  * multi-modality: works on both 2D (multichannel) images and 3D image stacks.
+  * Multi-modality: works on both 2D (multichannel) images and 3D image stacks.
 
   * Speed: Inference time of the base model (150M parameters) is < 200 ms on GPU for an 1024x1024x3 image. We achieve this by desigining an end-to-end algorithm and aggressively eliminate CPU-dependent post-processings.
 
-  * Point-supervised traing: Lacss is a multi-task model with a separate "localization" head (beside the segmentation head) predicting cell locations. This also means that you can train/fine-tune cell-segmentation models using only point labels. See [refernces](#references) for details.
+  * Point-supervised training: Lacss is a multi-task model with a separate "localization" head (besides the segmentation head) predicting cell locations. This also means that you can train/fine-tune cell-segmentation using only point labels. See [references](#references) for details.
 
 ## Give It A Try:
 
