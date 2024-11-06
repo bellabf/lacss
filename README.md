@@ -1,7 +1,7 @@
 # LACSS
 LACSS is a deep-learning model for 2D/3D single-cell segmentation from microscopy images.
 ```sh
-   pip install lacss
+   pip install lacss[cuda12]
 ```
 
 ## Models checkpoints

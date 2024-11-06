@@ -23,7 +23,7 @@ xtrain = { version = "^0.4.0", optional = true }
 jax = { version = "^0.4", extras = ["cuda12"], optional = true }
 
 [tool.poetry.extras]
-train = [ "ml-collections", "tensorflow", "xtrain" ]
+train = [ "jax", "ml-collections", "tensorflow", "xtrain" ]
 cuda12 = [ "jax" ]
 
 [tool.poetry.group.dev.dependencies]
