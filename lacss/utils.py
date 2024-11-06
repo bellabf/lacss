@@ -1,6 +1,5 @@
 import jax.numpy as jnp
 import numpy as np
-# from xtrain import pack_x_y_sample_weight, unpack_x_y_sample_weight
 
 def _to_str(p):
     return "".join(p.astype(int).reshape(-1).astype(str).tolist())
@@ -101,7 +100,7 @@ def load_from_pretrained(pretrained: str):
     Returns: A tuple (module, parameters) representing the model.
     """
     import os
-    import cloudpickle as pickle
+    import pickle
     from flax.core.frozen_dict import unfreeze
 
     if os.path.isdir(pretrained):
