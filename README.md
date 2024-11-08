@@ -45,11 +45,14 @@ For a GUI client see the [Trackmate-Lacss](https://github.com/jiyuuchc/TrackMate
   * [Demo site](https://huggingface.co/spaces/yulabuchc/lacss-space)
 
 #### Colabs
-  * [Supervised Training ![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jiyuuchc/lacss/blob/lacss1/notebooks/train_with_segmentation_label.ipynb)
-  * [With point label + mask ![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jiyuuchc/lacss/blob/lacss1/notebooks/train_with_point_and_mask.ipynb)
-  * [With point label only ![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jiyuuchc/lacss/blob/lacss1/notebooks/train_with_point_label.ipynb)
-
+##### Inference
   * [Inference ![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jiyuuchc/lacss/blob/main-jax/notebooks/inference.ipynb)
+  * [GRPC call ![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jiyuuchc/lacss/blob/main-jax/notebooks/grpc.ipynb)
+
+##### Train
+  * [Supervised Training ![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jiyuuchc/lacss/blob/main-jax/notebooks/train_with_segmentation_label.ipynb)
+  * [With point label only ![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jiyuuchc/lacss/blob/main-jax/notebooks/train_with_point_label.ipynb)
+
 
 ## Documentation
 > [API documentation](https://jiyuuchc.github.io/lacss/)

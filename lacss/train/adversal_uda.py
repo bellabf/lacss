@@ -8,15 +8,12 @@ import jax
 import flax.linen as nn
 import optax
 
-from xtrain.utils import unpack_x_y_sample_weight, unpack_prediction_and_state, Inputs
+from xtrain.utils import unpack_x_y_sample_weight, Inputs
 from xtrain.strategy import VMapped, TrainState, LossLog
 from xtrain.base_trainer import TrainIterator
 
-from ..utils import deep_update
-from ..modules import ConvNeXt
 from ..modules.common import PositionEmbedding2D, FFN
 from ..ops import gradient_reversal
-from lacss.train.train import train_fn
 
 jnp = jax.numpy
 

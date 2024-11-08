@@ -127,8 +127,8 @@ def _init_cks(it, model, inputs):
     ]
     it_.variables = {}
     it_.has_aux = False
-    it_.frozen = jax.tree_util.tree_map(lambda _:False, it_.parameters)
-    it_.freeze("principal")
+    # it_.frozen = jax.tree_util.tree_map(lambda _:False, it_.parameters)
+    # it_.freeze("principal")
     return it_
 
 
