@@ -54,14 +54,13 @@ class CtcVideo:
 
         if segfn.exists():
             label = imageio.imread(segfn)
-            if label.max() != len(data['centroids']):
-                pass
-                # warnings.warn(f"TRA label and SEG label mismatch")
-            else:
+            if label.max() == len(data['centroids']):
                 locs = np.array([rp.centroid for rp in regionprops(label)]) + .5
                 bboxes = np.array([rp.bbox for rp in regionprops(label)])
                 masks = to_masks(label, bboxes, target_shape=SEG_SHAPE)
                 data.update({"centroids":locs, "bboxes":bboxes, "cell_masks":masks})
+            # else:
+            #     warnings.warn(f"TRA label and SEG label mismatch")
 
         return data
 
@@ -251,7 +250,7 @@ def ctc_video_ds(datapath, n_refs=0, method=None):
         for name, scaling in ctc_catalog.items()
     ]
 
-    yield from gf_cycle(video_data_gen)(all_movies, n_refs, method)
+    yield from gf_cycle(video_data_gen)(all_movies, n_refs, method, fixed_length=300)
 
 
 def ctc_video_ds_test(datapath, name, n_refs=0, method=None):

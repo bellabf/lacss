@@ -87,8 +87,14 @@ def train_fn(
     image_mask: ArrayLike|None = None,
     config: ConfigDict = ConfigDict(),
 ) -> dict:
+    image = jnp.asarray(image)
+    gt_locations = jnp.asarray(gt_locations)
+
     assert image.ndim in (3, 4) and image.shape[-1] == 3, f"wrong img shape {image.shape}"
     assert gt_locations.ndim == 2 and gt_locations.shape[1] in (2,3), f"wrong location data shape {gt_locations.shape}"
+
+    max_proposal_offset = config.get("max_proposal_offset", 12)
+    max_training_instances = config.get("max_training_instances", 256)
 
     is_3d = image.ndim == 4
 
