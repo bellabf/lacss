@@ -3,8 +3,8 @@
 import grpc
 import warnings
 
-from . import detection_request_pb2 as lacss_dot_detection__request__pb2
-from . import detection_response_pb2 as lacss_dot_detection__response__pb2
+from biopb.lacss import detection_request_pb2 as biopb_dot_lacss_dot_detection__request__pb2
+from biopb.lacss import detection_response_pb2 as biopb_dot_lacss_dot_detection__response__pb2
 
 GRPC_GENERATED_VERSION = '1.66.2'
 GRPC_VERSION = grpc.__version__
@@ -19,7 +19,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in lacss/lacss_pb2_grpc.py depends on'
+        + f' but the generated code in biopb/lacss/lacss_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -37,13 +37,13 @@ class LacssStub(object):
         """
         self.RunDetection = channel.unary_unary(
                 '/biopb.lacss.Lacss/RunDetection',
-                request_serializer=lacss_dot_detection__request__pb2.DetectionRequest.SerializeToString,
-                response_deserializer=lacss_dot_detection__response__pb2.DetectionResponse.FromString,
+                request_serializer=biopb_dot_lacss_dot_detection__request__pb2.DetectionRequest.SerializeToString,
+                response_deserializer=biopb_dot_lacss_dot_detection__response__pb2.DetectionResponse.FromString,
                 _registered_method=True)
         self.RunDetectionStream = channel.stream_stream(
                 '/biopb.lacss.Lacss/RunDetectionStream',
-                request_serializer=lacss_dot_detection__request__pb2.DetectionRequest.SerializeToString,
-                response_deserializer=lacss_dot_detection__response__pb2.DetectionResponse.FromString,
+                request_serializer=biopb_dot_lacss_dot_detection__request__pb2.DetectionRequest.SerializeToString,
+                response_deserializer=biopb_dot_lacss_dot_detection__response__pb2.DetectionResponse.FromString,
                 _registered_method=True)
 
 
@@ -74,13 +74,13 @@ def add_LacssServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'RunDetection': grpc.unary_unary_rpc_method_handler(
                     servicer.RunDetection,
-                    request_deserializer=lacss_dot_detection__request__pb2.DetectionRequest.FromString,
-                    response_serializer=lacss_dot_detection__response__pb2.DetectionResponse.SerializeToString,
+                    request_deserializer=biopb_dot_lacss_dot_detection__request__pb2.DetectionRequest.FromString,
+                    response_serializer=biopb_dot_lacss_dot_detection__response__pb2.DetectionResponse.SerializeToString,
             ),
             'RunDetectionStream': grpc.stream_stream_rpc_method_handler(
                     servicer.RunDetectionStream,
-                    request_deserializer=lacss_dot_detection__request__pb2.DetectionRequest.FromString,
-                    response_serializer=lacss_dot_detection__response__pb2.DetectionResponse.SerializeToString,
+                    request_deserializer=biopb_dot_lacss_dot_detection__request__pb2.DetectionRequest.FromString,
+                    response_serializer=biopb_dot_lacss_dot_detection__response__pb2.DetectionResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -108,8 +108,8 @@ class Lacss(object):
             request,
             target,
             '/biopb.lacss.Lacss/RunDetection',
-            lacss_dot_detection__request__pb2.DetectionRequest.SerializeToString,
-            lacss_dot_detection__response__pb2.DetectionResponse.FromString,
+            biopb_dot_lacss_dot_detection__request__pb2.DetectionRequest.SerializeToString,
+            biopb_dot_lacss_dot_detection__response__pb2.DetectionResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -135,8 +135,8 @@ class Lacss(object):
             request_iterator,
             target,
             '/biopb.lacss.Lacss/RunDetectionStream',
-            lacss_dot_detection__request__pb2.DetectionRequest.SerializeToString,
-            lacss_dot_detection__response__pb2.DetectionResponse.FromString,
+            biopb_dot_lacss_dot_detection__request__pb2.DetectionRequest.SerializeToString,
+            biopb_dot_lacss_dot_detection__response__pb2.DetectionResponse.FromString,
             options,
             channel_credentials,
             insecure,
