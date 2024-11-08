@@ -17,7 +17,7 @@ from .image import sub_pixel_samples
 
 Shape = Sequence[int]
 
-def gather_patches(source:ArrayLike, locations:ArrayLike, patch_size:int|tuple[int], *, padding_value=0):
+def gather_patches(source:Array, locations:ArrayLike, patch_size:int|tuple[int], *, padding_value=0):
     """ gather patches from an array
 
     Args:
@@ -52,7 +52,7 @@ def gather_patches(source:ArrayLike, locations:ArrayLike, patch_size:int|tuple[i
     grid = grid.swapaxes(0, 1) # [k, N, d1..dk]
 
     patches = source[tuple(grid)] # [N, d1..dk, B]
-    max_d = jnp.expand_dims(jnp.asarray(src_shape[-dim-1:-1]), axis=range(1, dim+2))
+    max_d = jnp.expand_dims(jnp.asarray(src_shape[:dim]), axis=range(1, dim+2))
     valid_loc = ((grid >= 0) & (grid<max_d)).all(axis=0) # [N, d1..dk]
     patches = jnp.where(
         valid_loc[..., None],
