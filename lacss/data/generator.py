@@ -10,7 +10,6 @@ from typing import Iterator, Optional, Sequence
 
 import imageio.v2 as imageio
 import numpy as np
-import tensorflow as tf
 from skimage.measure import regionprops
 
 
@@ -18,6 +17,8 @@ from skimage.measure import regionprops
 # Edge-based indexing is more accurate for float-value bboxes
 # i.e. value (0, 0) refers to the top-left cornor (not center) of the top-left pixel
 def _crop_and_resize(masks, boxes, target_shape):
+    import tensorflow as tf
+
     box_h = boxes[:, 2] - boxes[:, 0]
     box_w = boxes[:, 3] - boxes[:, 1]
     dh = box_h / target_shape[0] / 2
@@ -166,7 +167,7 @@ def dataset_from_coco_annotations(
     image_path: str,
     image_shape: tuple = [None, None, 3],
     mask_shape: tuple = [48, 48],
-) -> tf.Dataset:
+) -> "Dataset":
     """Obtaining a tensowflow dataset from coco annotations. See [coco_generator_full()](./#lacss.data.generator.coco_generator_full)
 
     Args:
@@ -180,6 +181,8 @@ def dataset_from_coco_annotations(
         A tensorflow dataset.
 
     """
+    import tensorflow as tf
+
     if mask_shape is None:
         mask_spec = tf.TensorSpec([None] + image_shape[:2], dtype=tf.float32)
     else:
@@ -257,7 +260,7 @@ def dataset_from_simple_annotations(
     image_path: str,
     image_shape: Sequence[int|None]=[None, None, 1],
     has_binary_mask: bool=False,
-) -> tf.data.Dataset:
+) -> "Dataset":
     """Obtaining a tensowflow dataset from simple annotatiion. See [simple_generator()](./#lacss.data.generator.simple_generator)
 
     Args:
@@ -269,6 +272,8 @@ def dataset_from_simple_annotations(
     Returns:
         A tensorflow dataset object
     """
+    import tensorflow as tf
+    
     ndim = len(image_shape) - 1
     output_signature = {
         "img_id": tf.TensorSpec([], dtype=tf.int64),
@@ -382,6 +387,8 @@ def img_mask_pair_generator(
 
 
 def _mask_from_label(inputs, *, mask_shape=[48, 48]):
+    import tensorflow as tf
+
     label = inputs["label"]
 
     # if not "bboxes" in inputs or not "centroids" in inputs:
@@ -415,7 +422,7 @@ def dataset_from_img_mask_pairs(
     image_shape: Sequence[int | None] = [None, None, 3],
     generate_masks: bool = False,
     mask_shape: tuple[int, int] = [48, 48],
-) -> tf.Dataset:
+) -> "Dataset":
     """Obtaining a tensowflow dataset from image/label pairs.
             See [img_mask_pair_generator()](./#lacss.data.generator.img_mask_pair_generator)
 
@@ -433,6 +440,8 @@ def dataset_from_img_mask_pairs(
     Returns:
         A tensorflow dataset object
     """
+    import tensorflow as tf
+
     ndim = len(image_shape) - 1
     if generate_masks:
         ds = tf.data.Dataset.from_generator(
