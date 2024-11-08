@@ -6,6 +6,7 @@ import ml_collections
 import numpy as np
 import tensorflow_datasets as tfds
 import tensorflow as tf
+import lacss.data.augment as augment
 
 TAGET_LABEL_LEN = 1024
 CROP_SIZE = 192
@@ -18,7 +19,6 @@ def _train_data_map(
     crop_size = CROP_SIZE,
     rescale_factor = 0.2,
 ):
-    import lacss.data
 
     data['masks'] = data['cell_masks']
     del data['cell_masks']
@@ -26,20 +26,20 @@ def _train_data_map(
     s = tf.random.uniform([3]) * rescale_factor * 2 + (1 - rescale_factor)
 
     axes = tf.random.shuffle(tf.range(3))
-    data = lacss.data.transpose(data, axes=axes, p = .5)
+    data = augment.transpose(data, axes=axes, p = .5)
     target_size = tf.cast(tf.round(s * crop_size), tf.int32)
-    data = lacss.data.random_crop_or_pad(
+    data = augment.random_crop_or_pad(
         data, 
         target_size=target_size,
         area_ratio_threshold=.5,
         clip_boxes=False,
     )
 
-    data = lacss.data.resize(data, target_size=(crop_size, crop_size, crop_size))
+    data = augment.resize(data, target_size=(crop_size, crop_size, crop_size))
 
-    data = lacss.data.flip_top_bottom(data, p=.5)
-    data = lacss.data.flip_left_right(data, p=.5)
-    data = lacss.data.flip_up_down(data, p=.5)
+    data = augment.flip_top_bottom(data, p=.5)
+    data = augment.flip_left_right(data, p=.5)
+    data = augment.flip_up_down(data, p=.5)
     
     return data
 
@@ -60,12 +60,11 @@ def format_train_data(x):
 
 
 def format_test_data_3d(data, *, crop_size = CROP_SIZE):
-    import lacss.data
 
     data['masks'] = data['cell_masks']
     del data['cell_masks']
 
-    data = lacss.data.random_crop_or_pad(
+    data = augment.random_crop_or_pad(
         data, target_size=(crop_size,) * 3, 
         clip_boxes=False, 
         area_ratio_threshold=0.5,

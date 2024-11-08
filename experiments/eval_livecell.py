@@ -11,7 +11,6 @@ from absl import app, flags
 from tqdm import tqdm
 from skimage.transform import rescale
 
-import lacss.data
 import lacss.ops
 
 from lacss.deploy import Predictor

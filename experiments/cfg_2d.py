@@ -7,7 +7,7 @@ import tensorflow as tf
 import numpy as np
 import tensorflow_datasets as tfds
 
-import lacss.data
+import lacss.data.augment as augment
 
 INPUT_PADDING = 768
 IMG_SIZE = [544, 544]
@@ -46,11 +46,11 @@ def augment(x, crop_size=IMG_SIZE, s=None):
         int(tf.round( float(w) / scaling_x )),
     )
 
-    x = lacss.data.random_crop_or_pad(x, target_size=crop_sz, area_ratio_threshold=0.5)
-    x = lacss.data.resize(x, target_size = crop_size)
+    x = augment.random_crop_or_pad(x, target_size=crop_sz, area_ratio_threshold=0.5)
+    x = augment.resize(x, target_size = crop_size)
 
-    x = lacss.data.flip_up_down(x, p=0.5)
-    x = lacss.data.flip_left_right(x, p=0.5)
+    x = augment.flip_up_down(x, p=0.5)
+    x = augment.flip_left_right(x, p=0.5)
 
     x['image'] = tf.ensure_shape(x['image'], crop_size + [3])
 
@@ -83,7 +83,6 @@ def _get_ds(name, split="train"):
     )
 
 def format_test_data(x, target_size=IMG_SIZE, s=None):
-    import lacss.data
 
     x['image'] = _standardize(x["image"])
 
@@ -97,8 +96,8 @@ def format_test_data(x, target_size=IMG_SIZE, s=None):
         int(tf.round( float(w) / s )),
     )
 
-    x = lacss.data.random_crop_or_pad(x, target_size=crop_sz, area_ratio_threshold=0.5)
-    x = lacss.data.resize(x, target_size = target_size)
+    x = augment.random_crop_or_pad(x, target_size=crop_sz, area_ratio_threshold=0.5)
+    x = augment.resize(x, target_size = target_size)
 
     return dict(image=x['image']), dict(
         gt_locations=x["centroids"],
@@ -125,7 +124,7 @@ def get_config():
             [.20, .30, .35, .05, .05, .05],
         )
         .map(
-            partial(lacss.data.cutout, size=10, n=50),
+            partial(augment.cutout, size=10, n=50),
             num_parallel_calls=tf.data.AUTOTUNE,
         )
         .filter(check_cell_number)
