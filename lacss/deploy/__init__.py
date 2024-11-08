@@ -1,5 +1,5 @@
 from typing import Mapping
-from .predict import Predictor
+# from .predict import Predictor
 
 model_urls: Mapping[str, str] = {
     "lacss3-small": "https://huggingface.co/jiyuuchc/lacss3-small/resolve/main/lacss3-small",
