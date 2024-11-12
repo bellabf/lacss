@@ -12,16 +12,26 @@ from absl import app, flags
 
 flags.DEFINE_string("checkpoint", None, "", required=True)
 flags.DEFINE_string("datapath", "/home/FCAM/jyu/datasets/", "test data directory")
-flags.DEFINE_float("nms", 0.0, "non-max-supress threshold")
+flags.DEFINE_float("nms", 0.5, "non-max-supress threshold")
 flags.DEFINE_float("minscore", 0.1, "min score")
 flags.DEFINE_float("minarea", 0.0, "min area of cells")
 flags.DEFINE_float("dicescore", 0.4, "score threshold for Dice score")
 flags.DEFINE_bool("multiscale", True, "whether test with multi-scale")
 flags.DEFINE_bool("large", False, "whether to use large_image predictor")
+flags.DEFINE_string("logpath", None, "dir to save inference results")
 
 FLAGS = flags.FLAGS
 
 _th = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
+
+
+def compute_label(pred, image, n_cells):
+    import cv2
+    label = np.zeros(image.shape[:2], dtype='uint16')
+    for k, contour in enumerate(pred['pred_contours'][n_cells-1::-1]):
+        contour = np.round(contour).astype(int)
+        cv2.fillPoly(label, [contour], k + 1)
+    return label
 
 def test_data():
     data_path = Path(FLAGS.datapath)
@@ -44,7 +54,8 @@ def main(_):
     from lacss.metrics.common import compute_mask_its
     from lacss.metrics.dice import Dice
     from lacss.metrics import AP
-    from lacss.deploy import Predictor
+    from lacss.deploy.predict import Predictor
+
     from tqdm import tqdm
     from skimage.transform import resize
 
@@ -54,6 +65,8 @@ def main(_):
     jax.config.update("jax_persistent_cache_min_compile_time_secs", 5)
 
     model = Predictor(FLAGS.checkpoint)
+    model.module.detector.max_output = 1024
+
     print(f"Model parameters loaded from {FLAGS.checkpoint}")
 
     model.module.detector.max_output = 2048
@@ -65,11 +78,12 @@ def main(_):
     dice = Dice()
 
     if FLAGS.multiscale:
-        scales = [0.4, 0.65, 1.0, 1.4, 2.0]
+        # scales = [0.4, 0.65, 1.0, 1.4, 2.0]
+        scales = [0.4, 0.65, 1.0, 1.5, 2.0]
     else:
         scales = [1.0]
 
-    for image, label in tqdm(test_data()):
+    for img_no, (image, label) in enumerate(tqdm(test_data())):
         best = 0
         for s in scales:
             target_sz = np.round(np.array(image.shape[:2]) * s).astype(int)
@@ -91,7 +105,7 @@ def main(_):
                     reshape_to=target_sz,
                     min_area=FLAGS.minarea,
                     score_threshold=FLAGS.minscore,
-                    # nms_iou=FLAGS.nms,
+                    nms_iou=FLAGS.nms,
                     output_type="contour",
                     gs=544, ss=480,
                 )
@@ -108,6 +122,7 @@ def main(_):
                 best = ap.compute()[0.5]
                 scores, areas, gt_areas = scores_, areas_, gt_areas_
                 mask_ious, mask_its = mask_ious_, mask_its_
+                pred_best = pred
 
         #AP
         mask_ap.update(mask_ious, scores)
@@ -119,6 +134,10 @@ def main(_):
 
         dice.update(valid_its, valid_areas, gt_areas)
 
+        if FLAGS.logpath is not None:
+            import tifffile
+            pred_label = compute_label(pred_best, image, label.max())
+            tifffile.imwrite(Path(FLAGS.logpath) / f"pred_{img_no:04d}.tif", pred_label)
 
     print("MaskAP: ", mask_ap.compute())
     print("Dice: ", dice.compute())

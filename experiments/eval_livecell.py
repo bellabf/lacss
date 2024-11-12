@@ -13,7 +13,7 @@ from skimage.transform import rescale
 
 import lacss.ops
 
-from lacss.deploy import Predictor
+from lacss.deploy.predict import Predictor
 from lacss.metrics import AP, LoiAP
 from lacss.metrics.dice import Dice
 

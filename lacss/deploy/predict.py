@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 import math
 import time
-from functools import reduce
+from functools import reduce, partial
 from typing import Mapping, Sequence, Tuple
 
 import cv2
@@ -167,6 +167,77 @@ def _nms(preds, th):
 
     return preds
 
+
+def _predict_partial(model, params, image):
+    model = model.copy()
+    model.segmentor = None
+    model.segmentor_3d = None
+
+    lpn_out, seg_features = [], []
+    for p in params:
+        model_out =  model.apply(dict(params=p), image)
+        lpn_out.append( model_out['detector'] )
+        seg_features.append(model_out['seg_features'])
+
+    lpn_out = jax.tree_util.tree_map(
+        lambda *x: jnp.stack(x), * lpn_out
+    )
+    lpn_out = dict(
+        logits = lpn_out['logits'].mean(axis=0),
+        regressions =  lpn_out['regressions'].mean(axis=0),
+        ref_locs = lpn_out['ref_locs'][0],
+    )
+    lpn_out['pred_locs'] = lpn_out['ref_locs'] + lpn_out['regressions'] * model.detector.feature_scale
+
+    return seg_features, lpn_out
+
+
+@partial(jax.jit, static_argnums=0)
+def _predict(model, params, image):
+    from lacss.modules.lpn import generate_predictions
+
+    seg_features, lpn_out = _predict_partial(model, params, image)
+
+    predictions = generate_predictions(model.detector, lpn_out)
+
+    assert len(seg_features) == len(params)
+
+    seg_predictions = []
+    if image.ndim == 3 and model.segmentor is not None:
+        for x, p in zip(seg_features, params):
+            seg_predictions.append( 
+                model.segmentor.apply(
+                    dict(params=p['segmentor']), 
+                    x, 
+                    predictions['locations']
+                )['predictions'] 
+            )
+
+    elif image.ndim == 4 and model.segmentor_3d is not None:
+        seg_predictions = []
+        for x, p in zip(seg_features, params):
+            seg_predictions.append( 
+                model.segmentor_3d.apply(
+                    dict(params=p['segmentor_3d']), 
+                    x, 
+                    predictions['locations']
+                )['predictions'] 
+            )
+
+    if len(seg_predictions) > 0:
+        predictions['segmentations'] = jnp.mean(
+            jnp.array([ x['segmentations'] for x in seg_predictions]),
+            axis = 0,
+        )
+
+        seg_prediction = seg_predictions[0]
+        del seg_prediction['segmentations']
+
+        predictions.update( seg_prediction )
+        
+    return predictions
+
+
 class Predictor:
     """Main class interface for model deployment. This is the only class you
     need if you don't train your own model
@@ -192,6 +263,9 @@ class Predictor:
     def __init__(
             self, 
             url: str | tuple[nn.Module, dict],
+            *,
+            grid_size = 544,
+            step_size = 480,
         ):
         """Construct Predictor
 
@@ -201,15 +275,29 @@ class Predictor:
         """
 
         if isinstance(url, tuple) and len(url) == 2:
-            self.model = url
-            if not isinstance(self.model[0], nn.Module):
+            if not isinstance(url[0], nn.Module):
                 raise ValueError(
                     "Initiaize the Predictor with a tuple, but the first element is not a Module."
                 )
+
+            module, params = url
+
         else:
-            self.model = load_from_pretrained(url)
-        
-        self.apply_fn = jax.jit(self.module.apply)
+            module, params = load_from_pretrained(url)
+
+
+        if isinstance(params, Mapping):
+            params = [params]
+
+        self.module = module
+        self.params = params
+
+        assert step_size < grid_size, f"step_size ({step_size}) not smaller than grid_size ({grid_size})"
+        assert grid_size % 32 == 0, f"grid_size ({grid_size}) is not divisable by 32"
+
+        self.gs = grid_size
+        self.ss = step_size
+
 
     def predict(
         self,
@@ -292,7 +380,7 @@ class Predictor:
 
         logging.debug(f"done preprocessing")
 
-        preds = self.apply_fn(dict(params=self.params), image)["predictions"]
+        preds = _predict(self.module, self.params, image)
 
         scores = preds["scores"]
         bboxes = bboxes_of_patches(
@@ -478,7 +566,7 @@ class Predictor:
                 score_threshold=score_threshold,
                 segmentation_threshold=segmentation_threshold,
                 min_area=min_area,
-                nms_iou=nms_iou,
+                nms_iou=0.5,
                 normalize=False,
                 output_type="bbox",
             )
@@ -500,8 +588,8 @@ class Predictor:
         # nms
         logging.info(f"nms...")
 
-        asort = np.argsort(preds["pred_scores"])[::-1]
-        preds = jax.tree_util.tree_map(lambda x: x[asort], preds)
+        # asort = np.argsort(preds["pred_scores"])[::-1]
+        # preds = jax.tree_util.tree_map(lambda x: x[asort], preds)
         preds = _nms(preds, nms_iou)
 
         # rescale
@@ -568,15 +656,3 @@ class Predictor:
             preds['pred_label'] = label
 
             return preds
-
-    @property
-    def module(self) -> nn.Module:
-        return self.model[0]
-
-    @property
-    def params(self) -> dict:
-        return self.model[1]
-
-    @params.setter
-    def params(self, new_params):
-        self.model = self.module, new_params

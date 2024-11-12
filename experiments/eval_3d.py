@@ -107,7 +107,7 @@ def main(_):
     from pprint import pp
     import imageio.v2 as imageio
     import pickle
-    from lacss.deploy import Predictor
+    from lacss.deploy.predict import Predictor
     from lacss.metrics import AP 
     from lacss.metrics.dice import Dice
     from lacss.utils import load_from_pretrained
@@ -165,6 +165,7 @@ def main(_):
                 dice.update(mask_its[bm], mask_vols[bm], gt_mask_vols)
         
             print("MaskAP: ", ap.compute())
+            print("mAP", sum(ap.compute().values())/10)
             print("Dice: ", dice.compute())
 
     cp = Path(_FLAGS.checkpoint)

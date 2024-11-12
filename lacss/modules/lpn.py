@@ -83,6 +83,7 @@ class LPN(nn.Module, DefaultUnpicklerMixin):
         ref_locs = jnp.moveaxis(jnp.mgrid[:height, :width] + 0.5, 0, -1) * self.feature_scale
         locs = ref_locs + regressions * self.feature_scale
 
+
         return dict(
             regressions=regressions.reshape(-1, 2),
             logits = logits.reshape(-1),

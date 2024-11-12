@@ -107,19 +107,20 @@ def load_from_pretrained(pretrained: str):
         # directory are orbax checkpoint
         import orbax.checkpoint as ocp
 
-        pretrained = os.path.abspath(pretrained)
-        if os.path.exists(os.path.join(pretrained, "default")):
-            params = ocp.StandardCheckpointer().restore(os.path.join(pretrained, "default"))
-        else:
-            params = ocp.StandardCheckpointer().restore(pretrained)
-        params = params['train_state']['params']
-        with open(os.path.join(os.path.dirname(pretrained), "model.pkl"), "rb") as f:
+        with open(os.path.join(os.path.dirname(pretrained), "..", "model.pkl"), "rb") as f:
             module = pickle.load(f)
+
+        cp_dir = os.path.abspath(pretrained)
+        if os.path.exists(os.path.join(cp_dir, "default")):
+            params = ocp.StandardCheckpointer().restore(os.path.join(cp_dir, "default"))
+        else:
+            params = ocp.StandardCheckpointer().restore(cp_dir)
+
+        params = ( params['train_state']['params'], )
 
     else:
         # uri or files were treated as pickled byte steam
         from .modules import Lacss
-        # from .train import Trainer
 
         if os.path.isfile(pretrained):
             with open(pretrained, "rb") as f:
@@ -134,20 +135,27 @@ def load_from_pretrained(pretrained: str):
             bytes = urlopen(req).read()
             thingy = pickle.loads(bytes)
 
-        cfg, params = thingy
+        cfg, *params = thingy
+
+        assert len(params) >= 1, f"No parameter found for model {cfg}"
 
         if isinstance(cfg, Lacss):
             module = cfg
         else:
-            module = Lacss.from_config(cfg)
+            try:
+                module = Lacss.from_config(cfg)
+            except:
+                raise RuntimeError("Cannot interpet {cfg} as an Lacss model")
 
-    if "params" in params and len(params) == 1:
-        params = params["params"]
+    params = [ p['params'] if 'params' in p else p for p in params]
+
+    if len(params) == 1:
+        params = params[0]
 
     # for backward compatibility
-    if not "cnn" in params['backbone']:
-        params['backbone']['cnn'] = params['backbone']['ConvNeXt_0']
-        del params['backbone']['ConvNeXt_0']
+    # if not "cnn" in params['backbone']:
+    #     params['backbone']['cnn'] = params['backbone']['ConvNeXt_0']
+    #     del params['backbone']['ConvNeXt_0']
     
     # if not "Scan_PatchOp_0" in params["segmentor"]:
     #     params = unfreeze(params)

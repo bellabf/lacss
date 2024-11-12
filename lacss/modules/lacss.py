@@ -47,9 +47,14 @@ class Lacss(nn.Module, DefaultUnpicklerMixin):
         image = jnp.asarray(image)
 
         x_det, x_seg = self.get_features(image, video_refs, deterministic=True)
+        outputs = dict(
+            det_features = x_det,
+            seg_features = x_seg,
+        )
 
         if image.ndim == 3:
-            outputs = self.detector(x_det, mask=image_mask)
+            detector_outputs = self.detector(x_det, mask=image_mask)
+            outputs = deep_update(outputs, detector_outputs)
 
             if self.segmentor is not None:
                 segmentor_out = self.segmentor(
@@ -60,7 +65,8 @@ class Lacss(nn.Module, DefaultUnpicklerMixin):
         else:
             if self.detector_3d is None:
                 raise(ValueError("not a 3d detector"))
-            outputs = self.detector_3d(x_det, mask=image_mask)
+            detector_outputs = self.detector_3d(x_det, mask=image_mask)
+            outputs = deep_update(outputs, detector_outputs)
 
             if self.segmentor_3d is not None:
                 segmentor_out = self.segmentor_3d(

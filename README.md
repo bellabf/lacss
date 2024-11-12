@@ -10,6 +10,7 @@ LACSS is a deep-learning model for 2D/3D single-cell segmentation from microscop
 | :--- | --- | --- | :---: | :---: | :---: | :---: | :---: | 
 | small | 60M | [model](https://huggingface.co/jiyuuchc/lacss3-small/resolve/main/lacss3-small)| 56.3 | 52.0 | 54.2 | 44.4 | 56.7 |
 | base | 152M | [model](https://huggingface.co/jiyuuchc/lacss3-base/resolve/main/lacss3-base)| 57.1 | 56.0 | 62.9 | 47.0 | 60.8 |
+| base-e | 304M | [model](https://huggingface.co/jiyuuchc/lacss3-base-e/resolve/main/lacss3-base-e) | 57.4 | 58.3 | 65.7 | 49.8 | 61.9 |
 
 * mAP is the average of APs at IOU threshoulds of 0.5-0.95 (10 segments). Evaluations are on either testing or validation split of the corresponding datasets.
 
